@@ -9,7 +9,7 @@ setup(
     name="data_toolbox",
     version="0.0.1",
     author="Haoyin Xu, Jacob Desman",
-    asuthor_email="haoyinxu@gmail.com",
+    author_email="haoyinxu@gmail.com",
     description="Team Cyan's function toolbox for exploring databases",
     long_description=LONG_DESCRIPTION,
     long_description_content_type="text/markdown",
