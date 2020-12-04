@@ -10,6 +10,8 @@ setup(
     version="0.0.1",
     author="Haoyin Xu, Jacob Desman",
     author_email="haoyinxu@gmail.com",
+    maintainer="Haoyin Xu",
+    maintainer_email="haoyinxu@gmail.com",
     description="Team Cyan's function toolbox for exploring databases",
     long_description=LONG_DESCRIPTION,
     long_description_content_type="text/markdown",
@@ -20,4 +22,5 @@ setup(
         "Programming Language :: Python :: 3",
     ],
     install_requires=REQUIREMENTS,
+    packages=find_packages()
 )
