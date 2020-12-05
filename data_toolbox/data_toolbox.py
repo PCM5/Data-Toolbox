@@ -8,6 +8,7 @@ import numpy as np
 def find_patient(fname, patientunitstayid, cs=100000, verbose=True):
     """
     Retrieve single patient info. Also sorts by offsets
+    
     Parameters:
         patientunitstayid: the patient whose data to pull
         cs = the size of the chunk to iterate through
@@ -45,7 +46,8 @@ def find_patient(fname, patientunitstayid, cs=100000, verbose=True):
 def plot_vitals(vitals, patient):
     """
     Given a list of vitals and patient, form a nice timeseries plot
-    Args:
+    
+    Parameters:
         vitals: list of list in the form:
                  [nursingchartcelltypevallabel, nursingchartcelltypevalname]
         patient: dataframe from a single patient's data
@@ -82,6 +84,7 @@ def plot_vitals(vitals, patient):
 def multi_patient_feature_plot(df, vitals):
     """
     For a dataframe of a given size, plot the time series feature of all patients
+    
     Parameters:
         df = the pd dataframe to extract info from (don't use a big one!)
         vitals = list of list in form [[nursingchartcelltypevallabel, nursingchartcelltypevalname]]
