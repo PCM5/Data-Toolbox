@@ -444,6 +444,7 @@ def normal_pa(systolic, diastolic, mean_p):
 def normal_lab(labname, num):
     """
     Function to normalize lab values.
+    
     Parameters:
         labname: the label name of lab test
         num: the originial input value
