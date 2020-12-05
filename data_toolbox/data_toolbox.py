@@ -439,3 +439,67 @@ def normal_pa(systolic, diastolic, mean_p):
     # Return normal values directly
     else:
         return systolic, diastolic, mean_p
+
+    
+def normal_lab(labname, num):
+    """
+    Function to normalize lab values.
+    Parameters:
+        labname: the label name of lab test
+        num: the originial input value
+    Return:
+        num: the normalized output value
+    """
+    labmin = {'BUN': 0,
+     'Hct': 0,
+     'Hgb': 1,
+     'MCH': 10,
+     'MCHC': 15,
+     'MCV': 40,
+     'MPV': 3,
+     'RBC': 2,
+     'RDW': 5,
+     'WBC x 1000': 0,
+     'anion gap': 0,
+     'bedside glucose': 0,
+     'bicarbonate': 1,
+     'calcium': 3,
+     'chloride': 40,
+     'creatinine': 1,
+     'glucose': 0,
+     'platelets x 1000': 0,
+     'potassium': 1,
+     'sodium': 80}
+    
+    labmax = {'BUN': 200,
+     'Hct': 70,
+     'Hgb': 30,
+     'MCH': 50,
+     'MCHC': 60,
+     'MCV': 150,
+     'MPV': 20,
+     'RBC': 10,
+     'RDW': 25,
+     'WBC x 1000': 100,
+     'anion gap': 40,
+     'bedside glucose': 1000,
+     'bicarbonate': 50,
+     'calcium': 20,
+     'chloride': 160,
+     'creatinine': 20,
+     'glucose': 1000,
+     'platelets x 1000': 2000,
+     'potassium': 10,
+     'sodium': 200}
+    
+    rangemin = labmin[labname]
+    rangemax = labmax[labname]
+    
+    if num == np.nan:
+        return num
+    # Remove values out of range
+    elif num > rangemax or num <  rangemin:
+        return np.nan
+    # Return normal values directly
+    else:
+        return num
