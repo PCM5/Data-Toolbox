@@ -3,12 +3,15 @@ Prototype functions that are useful for data exploration
 """
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.calibration import calibration_curve
+from sklearn.metrics import auc, roc_curve, precision_recall_curve, brier_score_loss
 
 
 def find_patient(fname, patientunitstayid, cs=100000, verbose=True):
     """
     Retrieve single patient info. Also sorts by offsets
-    
+
     Parameters:
         patientunitstayid: the patient whose data to pull
         cs = the size of the chunk to iterate through
@@ -46,7 +49,7 @@ def find_patient(fname, patientunitstayid, cs=100000, verbose=True):
 def plot_vitals(vitals, patient):
     """
     Given a list of vitals and patient, form a nice timeseries plot
-    
+
     Parameters:
         vitals: list of list in the form:
                  [nursingchartcelltypevallabel, nursingchartcelltypevalname]
@@ -84,7 +87,7 @@ def plot_vitals(vitals, patient):
 def multi_patient_feature_plot(df, vitals):
     """
     For a dataframe of a given size, plot the time series feature of all patients
-    
+
     Parameters:
         df = the pd dataframe to extract info from (don't use a big one!)
         vitals = list of list in form [[nursingchartcelltypevallabel, nursingchartcelltypevalname]]
@@ -443,67 +446,181 @@ def normal_pa(systolic, diastolic, mean_p):
     else:
         return systolic, diastolic, mean_p
 
-    
+
 def normal_lab(labname, num):
     """
     Function to normalize lab values.
-    
+
     Parameters:
         labname: the label name of lab test
         num: the originial input value
     Return:
         num: the normalized output value
     """
-    labmin = {'BUN': 0,
-     'Hct': 0,
-     'Hgb': 1,
-     'MCH': 10,
-     'MCHC': 15,
-     'MCV': 40,
-     'MPV': 3,
-     'RBC': 2,
-     'RDW': 5,
-     'WBC x 1000': 0,
-     'anion gap': 0,
-     'bedside glucose': 0,
-     'bicarbonate': 1,
-     'calcium': 3,
-     'chloride': 40,
-     'creatinine': 1,
-     'glucose': 0,
-     'platelets x 1000': 0,
-     'potassium': 1,
-     'sodium': 80}
-    
-    labmax = {'BUN': 200,
-     'Hct': 70,
-     'Hgb': 30,
-     'MCH': 50,
-     'MCHC': 60,
-     'MCV': 150,
-     'MPV': 20,
-     'RBC': 10,
-     'RDW': 25,
-     'WBC x 1000': 100,
-     'anion gap': 40,
-     'bedside glucose': 1000,
-     'bicarbonate': 50,
-     'calcium': 20,
-     'chloride': 160,
-     'creatinine': 20,
-     'glucose': 1000,
-     'platelets x 1000': 2000,
-     'potassium': 10,
-     'sodium': 200}
-    
+    labmin = {
+        "BUN": 0,
+        "Hct": 0,
+        "Hgb": 1,
+        "MCH": 10,
+        "MCHC": 15,
+        "MCV": 40,
+        "MPV": 3,
+        "RBC": 2,
+        "RDW": 5,
+        "WBC x 1000": 0,
+        "anion gap": 0,
+        "bedside glucose": 0,
+        "bicarbonate": 1,
+        "calcium": 3,
+        "chloride": 40,
+        "creatinine": 1,
+        "glucose": 0,
+        "platelets x 1000": 0,
+        "potassium": 1,
+        "sodium": 80,
+    }
+
+    labmax = {
+        "BUN": 200,
+        "Hct": 70,
+        "Hgb": 30,
+        "MCH": 50,
+        "MCHC": 60,
+        "MCV": 150,
+        "MPV": 20,
+        "RBC": 10,
+        "RDW": 25,
+        "WBC x 1000": 100,
+        "anion gap": 40,
+        "bedside glucose": 1000,
+        "bicarbonate": 50,
+        "calcium": 20,
+        "chloride": 160,
+        "creatinine": 20,
+        "glucose": 1000,
+        "platelets x 1000": 2000,
+        "potassium": 10,
+        "sodium": 200,
+    }
+
     rangemin = labmin[labname]
     rangemax = labmax[labname]
-    
+
     if num == np.nan:
         return num
     # Remove values out of range
-    elif num > rangemax or num <  rangemin:
+    elif num > rangemax or num < rangemin:
         return np.nan
     # Return normal values directly
     else:
         return num
+
+
+def plot_roc(clf_list, x_train, y_train, x_test, y_test, name_list):
+    """
+    Function to plot the ROC curve for classifiers
+    and list their AUC on the graph.
+
+    Parameters:
+        clf_list: the list of classifiers
+        x_train: the training dataset
+        y_train: the training labels
+        x_test: the testing dataset
+        y_test: the testing labels
+        name_list: the list of classifier names
+    """
+    plt.figure(figsize=(15, 15))
+    for index, clf in enumerate(clf_list):
+        clf.fit(x_train, y_train)
+
+        # make prediction
+        y_actual = y_test.copy()
+        y_pred = clf.predict_proba(x_test)[:, 1]
+        fprs, tprs, thresholds = roc_curve(y_actual, y_pred)
+        curve_auc = auc(fprs, tprs)
+        plt.plot(fprs, tprs, label="" + name_list[index] + ": AUC = %0.2f" % curve_auc)
+
+    plt.plot([0, 1], [0, 1], linestyle="--", lw=2, color="r", label="Chance", alpha=0.8)
+    plt.legend(loc="lower right", fontsize=20)
+    plt.title("ROC Curve", fontsize=20)
+    plt.xlabel("False Positive Rate", fontsize=20)
+    plt.ylabel("True Positive Rate", fontsize=20)
+    plt.show()
+
+
+def plot_pr(clf_list, x_train, y_train, x_test, y_test, name_list):
+    """
+    Function to plot the precision-recall curve for classifiers
+    and list their AUC on the graph.
+
+    Parameters:
+        clf_list: the list of classifiers
+        x_train: the training dataset
+        y_train: the training labels
+        x_test: the testing dataset
+        y_test: the testing labels
+        name_list: the list of classifier names
+    """
+    plt.figure(figsize=(15, 15))
+    for index, clf in enumerate(clf_list):
+        clf.fit(x_train, y_train)
+
+        # make prediction
+        y_actual = y_test.copy()
+        y_pred = clf.predict_proba(x_test)[:, 1]
+        precision, recall, thresholds = precision_recall_curve(y_actual, y_pred)
+        curve_auc = auc(recall, precision)
+        plt.plot(
+            recall, precision, label="" + name_list[index] + ": AUC = %0.2f" % curve_auc
+        )
+    plt.legend(loc="upper right", fontsize=20)
+    plt.title("Precision-Recall Curve", fontsize=20)
+    plt.xlabel("Recall", fontsize=20)
+    plt.ylabel("Precision", fontsize=20)
+    plt.show()
+
+
+def plot_cc(clf_list, x_train, y_train, x_test, y_test, name_list):
+    """
+    Function to plot the calibration curve for classifiers
+    and list their brier scores on the graph.
+
+    Parameters:
+        clf_list: the list of classifiers
+        x_train: the training dataset
+        y_train: the training labels
+        x_test: the testing dataset
+        y_test: the testing labels
+        name_list: the list of classifier names
+    """
+    fig, ax = plt.subplots(figsize=(15, 15))
+    ax.plot([0, 1], [0, 1], "k:", label="Perfectly calibrated")
+    for clf, name in zip(clf_list, name_list):
+        clf.fit(x_train, y_train)
+        y_pred = clf.predict(x_test)
+        if hasattr(clf, "predict_proba"):
+            prob_pos = clf.predict_proba(x_test)[:, 1]
+        else:
+            # use decision function
+            prob_pos = clf.decision_function(x_test)
+            prob_pos = (prob_pos - prob_pos.min()) / (prob_pos.max() - prob_pos.min())
+
+        clf_score = brier_score_loss(y_test, prob_pos)
+        fraction_of_positives, mean_predicted_value = calibration_curve(
+            y_ur_test, prob_pos, n_bins=10
+        )
+
+        ax.plot(
+            mean_predicted_value,
+            fraction_of_positives,
+            "s-",
+            label="%s: Brier = (%1.3f)" % (name, clf_score),
+        )
+
+    ax.set_xlabel("Mean predicted value", size=20)
+    ax.set_ylabel("Fraction of positives", size=20)
+    ax.set_ylim([-0.05, 1.05])
+    ax.legend(loc="lower right", fontsize=20)
+    ax.set_title("Calibration plots (reliability curve)", size=20)
+
+    plt.tight_layout()
