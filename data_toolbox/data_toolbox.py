@@ -624,3 +624,92 @@ def plot_cc(clf_list, x_train, y_train, x_test, y_test, name_list):
     ax.set_title("Calibration plots (reliability curve)", size=20)
 
     plt.tight_layout()
+
+
+def k_fold_roc(clf, x, y, folds):
+    """
+    Function to run a cross-validation model and produce the mean ROC values
+
+    Parameters:
+        clf_list: the list of classifiers
+        x: the dataset
+        y: the labels
+        folds: the number of folds to use
+    Returns:
+        mean_auc: the mean AUC
+        std_auc: the standard deviation of AUC
+        mean_tpr: the mean interpolated true positive rate
+    """
+    cv = StratifiedKFold(n_splits=folds)
+
+    tprs = []
+    aucs = []
+    mean_fpr = np.linspace(0, 1, 100)
+
+    for i, (train, test) in enumerate(cv.split(x, y)):
+        clf.fit(x[train], y[train])
+        y_pred = clf.predict_proba(x[test])[:, 1]
+        fpr, tpr, thresholds = roc_curve(y[test], y_pred)
+        curve_auc = auc(fpr, tpr)
+        interp_tpr = np.interp(mean_fpr, fpr, tpr)
+        interp_tpr[0] = 0.0
+        tprs.append(interp_tpr)
+        aucs.append(curve_auc)
+
+    mean_tpr = np.mean(tprs, axis=0)
+    mean_tpr[-1] = 1.0
+    mean_auc = auc(mean_fpr, mean_tpr)
+    std_auc = np.std(aucs)
+
+    return mean_auc, std_auc, mean_tpr
+
+
+def plot_k_fold_roc(clf_list, x, y, folds, name_list):
+    """
+    Function to plot the k-fold ROC curves for classifiers
+    and list their AUC on the graph.
+
+    Parameters:
+        clf_list: the list of classifiers
+        x: the dataset
+        y: the labels
+        folds: the number of folds to use
+        name_list: the list of classifier names
+    """
+    mean_aucs = []
+    std_aucs = []
+    mean_tprs = []
+    mean_fpr = np.linspace(0, 1, 100)
+
+    for index, clf in enumerate(clf_list):
+        mean_auc, std_auc, mean_tpr = k_fold_roc(clf, x, y, folds)
+        mean_aucs.append(mean_auc)
+        std_aucs.append(std_auc)
+        mean_tprs.append(mean_tpr)
+
+    # plot means
+    fig, ax = plt.subplots(figsize=(15, 15))
+    for i in range(len(mean_aucs)):
+        ax.plot(
+            mean_fpr,
+            mean_tprs[i],
+            label=r"%s (AUC = %0.2f $\pm$ %0.2f)"
+            % (name_list[i], mean_aucs[i], std_aucs[i]),
+            markersize=20,
+        )
+
+    ax.plot(
+        [0, 1],
+        [0, 1],
+        linestyle="--",
+        lw=2,
+        color="r",
+        label="Chance",
+        alpha=0.8,
+        markersize=20,
+    )
+    ax.set(xlim=[-0.05, 1.05], ylim=[-0.05, 1.05], title="ROC Curves")
+    ax.legend(loc="lower right", fontsize=20)
+    plt.xlabel("False Positive Rate", fontsize=20)
+    plt.ylabel("True Positive Rate", fontsize=20)
+    plt.show()
