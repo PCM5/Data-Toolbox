@@ -605,7 +605,7 @@ def plot_cc(clf_list, x_train, y_train, x_test, y_test, name_list):
 
         clf_score = brier_score_loss(y_test, prob_pos)
         fraction_of_positives, mean_predicted_value = calibration_curve(
-            y_ur_test, prob_pos, n_bins=10
+            y_test, prob_pos, n_bins=10
         )
 
         ax.plot(
